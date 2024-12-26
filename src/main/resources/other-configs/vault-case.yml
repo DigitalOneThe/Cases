@@ -1,0 +1,85 @@
+case-name:
+  - ""
+  - "&7» &6Коробка с валютой"
+  - ""
+  - "&7» &7У Вас &c0 &7ключ(ей) от этой коробки."
+  - "&7» &7Нажмите &aПКМ/ЛКМ, &7для открытия коробки,"
+  - "&7» &7или просмотра содержимого этой коробки."
+  - ""
+
+history-string:
+  - ""
+  - "&7» &7Победитель: &e%player%"
+  - "&7» &7Приз: %group%"
+  - ""
+  - "&7» &7Коробка: валюта"
+  - ""
+
+items:
+  item_1:
+    item: SUNFLOWER
+    display-name: "&a1000$"
+    action:
+      # Типы действий. Существует всего два типа: [message] - глобальное сообщение на весь сервер, без типа - команда в консоль
+      - "eco give %player% 1000"
+      - "[message]"
+      - "[message] &a» &7Игрок: &e%player% &7открыл кейс с валютой,"
+      - "[message] &a» &7и получил денежный приз в размере 1.000$"
+      - "[message] &a» &dПоздравляем победителя!"
+      - "[message]"
+    chance: 50
+  item_2:
+    item: SUNFLOWER
+    display-name: "&a1500$"
+    action:
+      - "eco give %player% 1500"
+      - "[message]"
+      - "[message] &a» &7Игрок: &e%player% &7открыл кейс с валютой,"
+      - "[message] &a» &7и получил денежный приз в размере 1.500$"
+      - "[message] &a» &dПоздравляем победителя!"
+      - "[message]"
+    chance: 45
+  item_3:
+    item: SUNFLOWER
+    display-name: "&a2000$"
+    action:
+      - "eco give %player% 2000"
+      - "[message]"
+      - "[message] &a» &7Игрок: &e%player% &7открыл кейс с валютой,"
+      - "[message] &a» &7и получил денежный приз в размере 2.000$"
+      - "[message] &a» &dПоздравляем победителя!"
+      - "[message]"
+    chance: 40
+  item_4:
+    item: SUNFLOWER
+    display-name: "&a2500$"
+    action:
+      - "eco give %player% 2500"
+      - "[message]"
+      - "[message] &a» &7Игрок: &e%player% &7открыл кейс с валютой,"
+      - "[message] &a» &7и получил денежный приз в размере 2.500$"
+      - "[message] &a» &dПоздравляем победителя!"
+      - "[message]"
+    chance: 35
+  item_5:
+    item: SUNFLOWER
+    display-name: "&a3000$"
+    action:
+      - "eco give %player% 3000"
+      - "[message]"
+      - "[message] &a» &7Игрок: &e%player% &7открыл кейс с валютой,"
+      - "[message] &a» &7и получил денежный приз в размере 3.000$"
+      - "[message] &a» &dПоздравляем победителя!"
+      - "[message]"
+    chance: 30
+  item_6:
+    item: SUNFLOWER
+    display-name: "&a10000$"
+    action:
+      - "eco give %player% 10000"
+      - "[message]"
+      - "[message] &a» &7Игрок: &e%player% &7открыл кейс с валютой,"
+      - "[message] &a» &7и получил денежный приз в размере 10.000$"
+      - "[message] &a» &dПоздравляем победителя!"
+      - "[message]"
+    chance: 5
