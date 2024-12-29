@@ -9,10 +9,10 @@ public class GroupData {
     private final ItemStack itemStack;
     private final String displayName;
     private List<String> action;
-    private int chance;
+    private double chance;
 
 
-    public GroupData(ItemStack itemStack, String displayName, int chance, List<String> action) {
+    public GroupData(ItemStack itemStack, String displayName, double chance, List<String> action) {
         this.itemStack = itemStack;
         this.displayName = displayName;
         this.chance = chance;
@@ -27,11 +27,11 @@ public class GroupData {
         return displayName;
     }
 
-    public int getChance() {
+    public double getChance() {
         return chance;
     }
 
-    public void setChance(int chance) {
+    public void setChance(double chance) {
         this.chance = chance;
     }
 

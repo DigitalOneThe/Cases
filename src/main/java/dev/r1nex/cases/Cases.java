@@ -9,7 +9,6 @@ import dev.r1nex.cases.command.CaseCommand;
 import dev.r1nex.cases.config.YamlConfig;
 import dev.r1nex.cases.data.BlockData;
 import dev.r1nex.cases.data.GroupData;
-import dev.r1nex.cases.data.HistoryData;
 import dev.r1nex.cases.listeners.Listeners;
 import dev.r1nex.cases.wrappers.WrapperPlayServerBlockAction;
 import eu.decentsoftware.holograms.api.DHAPI;
@@ -119,7 +118,7 @@ public final class Cases extends JavaPlugin {
                 ItemStack itemStack = new ItemStack(Material.valueOf(section.getString(key + ".item")));
                 String displayName = section.getString(key + ".display-name");
                 List<String> action = section.getStringList(key + ".action");
-                int chance = section.getInt(key + ".chance");
+                double chance = section.getDouble(key + ".chance");
 
                 GroupData data = new GroupData(itemStack, displayName, chance, action);
                 groupData.add(data);

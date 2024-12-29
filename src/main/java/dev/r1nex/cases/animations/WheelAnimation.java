@@ -44,11 +44,28 @@ public class WheelAnimation implements Animation {
         return speed;
     }
 
+    private GroupData getGroup(List<GroupData> groupData) {
+        double totalChance = 0.0;
+        for (GroupData group : groupData) {
+            totalChance += group.getChance();
+        }
+
+        double randomChance = ThreadLocalRandom.current().nextDouble() * totalChance;
+        double cumulativeChance = 0.0;
+        for (GroupData group : groupData) {
+            cumulativeChance += group.getChance();
+            if (randomChance <= cumulativeChance) {
+                return group;
+            }
+        }
+
+        return groupData.get(0);
+    }
+
     @Override
     public void start(BlockData blockData, Player player, Location location, Block block, int points, List<GroupData> groups) {
         for (int i = 0; i < points; i++) {
-            int index = ThreadLocalRandom.current().nextInt(groups.size());
-            GroupData group = groups.get(index);
+            GroupData group = getGroup(groups);
             ItemStack itemStack = group.getItemStack();
             String displayName = group.getDisplayName();
 
@@ -59,18 +76,17 @@ public class WheelAnimation implements Animation {
         }
 
         Location loc = new Location(location.getWorld(), location.getX(), location.getY(), location.getZ());
-        loc.setY(loc.getY() + 1.0);
+        loc.setY(loc.getY() + 1.5);
 
         final int totalTicks = 20 * 10;
         final Location center = location.clone();
 
+        final double angleIncrement = 2 * Math.PI / holograms.size();
+        final Queue<Hologram> hologramQueue = new LinkedList<>(holograms.keySet());
+
         new BukkitRunnable() {
             int ticks = 0;
-
             int removeDelay = 0;
-
-            final Queue<Hologram> hologramQueue = new LinkedList<>(holograms.keySet());
-            final double angleIncrement = 2 * Math.PI / holograms.size();
 
             @Override
             public void run() {

@@ -22,34 +22,34 @@ items:
     action:
       # Типы действий. Существует всего два типа: [message] - глобальное сообщение на весь сервер, без типа - команда в консоль
       - "give %player% minecraft:bread"
-    chance: 50
+    chance: 0.50
   item_2:
     item: COOKED_BEEF
     display-name: "&eСтейк"
     action:
       - "give %player% minecraft:cooked_beef"
-    chance: 45
+    chance: 0.45
   item_3:
     item: GOLDEN_APPLE
     display-name: "&6Золотое яблоко"
     action:
       - "give %player% minecraft:golden_apple"
-    chance: 40
+    chance: 0.40
   item_4:
     item: COOKIE
     display-name: "&aПеченье"
     action:
       - "give %player% minecraft:cookie"
-    chance: 35
+    chance: 0.35
   item_5:
     item: APPLE
     display-name: "&6Яблоко"
     action:
       - "give %player% minecraft:apple"
-    chance: 30
+    chance: 0.30
   item_6:
     item: ENCHANTED_GOLDEN_APPLE
     display-name: "&6Зачарованное яблоко"
     action:
       - "give %player% minecraft:enchanted_golden_apple"
-    chance: 5
+    chance: 0.5
