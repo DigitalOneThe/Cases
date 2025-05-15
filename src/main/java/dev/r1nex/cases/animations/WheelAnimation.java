@@ -4,7 +4,7 @@ import dev.r1nex.cases.Cases;
 import dev.r1nex.cases.animations.interfaces.Animation;
 import dev.r1nex.cases.data.BlockData;
 import dev.r1nex.cases.data.GroupData;
-import dev.r1nex.cases.data.HistoryData;
+import dev.r1nex.cases.data.interfaces.IAction;
 import eu.decentsoftware.holograms.api.DHAPI;
 import eu.decentsoftware.holograms.api.holograms.Hologram;
 import org.bukkit.*;
@@ -12,8 +12,6 @@ import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
-import org.bukkit.scheduler.BukkitTask;
-import org.bukkit.util.Vector;
 
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
@@ -21,8 +19,9 @@ import java.util.concurrent.ThreadLocalRandom;
 public class WheelAnimation implements Animation {
 
     private final HashMap<Hologram, GroupData> holograms = new HashMap<>();
-    private double speed = 0.0;
+    private double speed = 1.0;
     private double radius = 0.0;
+    private double rotationSpeed = 0.0;
 
     private final Cases plugin;
 
@@ -31,18 +30,8 @@ public class WheelAnimation implements Animation {
     }
 
     @Override
-    public void setSpeed(double value) {
-        speed = value;
-    }
-
-    @Override
     public void setRadius(double value) {
         radius = value;
-    }
-
-    @Override
-    public double getSpeed() {
-        return speed;
     }
 
     private GroupData getGroup(List<GroupData> groupData) {
@@ -63,9 +52,12 @@ public class WheelAnimation implements Animation {
         return groupData.get(0);
     }
 
+    private void sync(Runnable runnable) {
+        Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, runnable);
+    }
+
     @Override
     public void start(BlockData blockData, Player player, Location location, Block block, int points, List<GroupData> groups) {
-        // Инициализация голограмм (оставляем как есть)
         for (int i = 0; i < points; i++) {
             GroupData group = getGroup(groups);
             ItemStack itemStack = group.getItemStack();
@@ -77,111 +69,116 @@ public class WheelAnimation implements Animation {
             holograms.put(hologram, group);
         }
 
-        Location loc = new Location(location.getWorld(), location.getX(), location.getY(), location.getZ());
-        loc.setY(loc.getY() + 1.5);
+        Location locationVertex = new Location(location.getWorld(), location.getX(), location.getY(), location.getZ());
+        locationVertex.setY(locationVertex.getY() + 1.5);
 
-        final int totalTicks = 20 * 10; // 10 секунд
+        final int totalTicks = 20 * 10;
         final Location center = location.clone();
+        center.setYaw(180.0f);
+        center.setPitch(-180.0f);
+        final World world = center.getWorld(); // Кэшируем мир
         final double angleIncrement = 2 * Math.PI / holograms.size();
         final Queue<Hologram> hologramQueue = new LinkedList<>(holograms.keySet());
 
         new BukkitRunnable() {
-            int ticks = 0;
-            double radius = 0.0;
+            int calculateTicksAnimate = 0;
+            int removeDelay = 0;
+            double angleBase = 0.0;
 
             @Override
             public void run() {
-                if (ticks < totalTicks) {
-                    // Фаза вращения
-                    if (radius < 2.0) radius += 0.05;
+                calculateTicksAnimate++;
 
-                    double angle = (ticks * speed / 20.0) % 360;
-                    angle = Math.toRadians(angle);
+                if (radius < 2.0) {
+                    radius += 0.05;
+                }
 
-                    for (Hologram hologram : holograms.keySet()) {
-                        double x = radius * Math.cos(angle);
-                        double y = radius * Math.sin(angle);
-                        Location target = center.clone().add(x, 0, y);
-                        DHAPI.moveHologram(hologram, target);
+                if (!(calculateTicksAnimate >= totalTicks)) {
+                    rotationSpeed = Math.min(0.1, rotationSpeed + 0.0005);
+                }
 
-                        // Частицы (оставляем как есть)
-                        Color color = Color.fromRGB(
-                                (int) (Math.sin(ticks * 0.1) * 127 + 128),
-                                (int) (Math.sin(ticks * 0.1 + 2) * 127 + 128),
-                                (int) (Math.sin(ticks * 0.1 + 4) * 127 + 128)
-                        );
-                        center.getWorld().spawnParticle(
-                                Particle.REDSTONE,
-                                target,
-                                0,
-                                new Particle.DustOptions(color, 1)
-                        );
+                Color color = Color.fromRGB(
+                        (int) (Math.sin(calculateTicksAnimate * 0.1) * 127 + 128),
+                        (int) (Math.sin(calculateTicksAnimate * 0.1 + 2) * 127 + 128),
+                        (int) (Math.sin(calculateTicksAnimate * 0.1 + 4) * 127 + 128)
+                );
 
-                        angle += angleIncrement;
+                angleBase += rotationSpeed;
+                double angle = angleBase;
+
+                for (Map.Entry<Hologram, GroupData> entry : holograms.entrySet()) {
+                    final double x = radius * Math.cos(angle);
+                    final double y = radius * Math.sin(angle);
+
+                    Location target = center.clone().add(x, y + 0.1, 0);
+                    target.setYaw(0.0f);
+                    target.setPitch(-90.0f);
+
+                    DHAPI.moveHologram(entry.getKey(), target);
+                    if (calculateTicksAnimate % 4 == 0) {
+                        world.spawnParticle(Particle.REDSTONE, target, 0, new Particle.DustOptions(color, 1));
                     }
-                    ticks++;
-                } else {
-                    // Фаза притягивания
-                    Bukkit.getScheduler().runTaskTimer(Cases.getInstance(), task -> {
-                        if (hologramQueue.isEmpty()) {
-                            task.cancel();
-                            return;
+
+                    angle += angleIncrement;
+                }
+
+                if (calculateTicksAnimate >= totalTicks) {
+                    removeDelay ++;
+                    if (removeDelay == 5) {
+                        removeDelay = 0;
+                        ProcessDeleteItems(hologramQueue);
+                    }
+
+                    if (hologramQueue.size() == 1) {
+                        plugin.setChestOpened(block, true);
+                        MoveHologramToCenter();
+
+                        if (radius <= 0.0) {
+                            sync(() -> ProcessReward(player, hologramQueue.element(), 0));
+                            cancel();
                         }
-
-                        Hologram hologram = hologramQueue.peek();
-                        Location hologramLoc = hologram.getLocation();
-                        double distanceToCenter = hologramLoc.distance(center);
-
-                        if (distanceToCenter < 0.05) {
-                            // Завершение анимации
-                            finishAnimation(blockData, player, block, hologram, hologramQueue, task);
-                        } else {
-                            // Плавное притягивание
-                            Vector direction = center.toVector().subtract(hologramLoc.toVector()).normalize();
-                            double pullDistance = distanceToCenter; // Расстояние до центра
-
-                            // Нелинейная скорость: чем ближе к центру, тем медленнее
-                            double pullSpeed = Math.min(0.1, 0.05 * pullDistance * pullDistance); // Квадратичное замедление
-                            hologramLoc.add(direction.multiply(pullSpeed));
-                            DHAPI.moveHologram(hologram, hologramLoc);
-                        }
-                    }, 0L, 1L);
-                    cancel();
+                    }
                 }
             }
-        }.runTaskTimer(plugin, 0, 1);
+        }.runTaskTimerAsynchronously(plugin, 0, 1);
     }
 
-    private void finishAnimation(BlockData blockData, Player player, Block block, Hologram hologram, Queue<Hologram> hologramQueue, BukkitTask task) {
-        GroupData group = holograms.get(hologram);
-        if (group != null) {
-            for (String action : group.getAction()) {
-                if (action.contains("[message]")) {
-                    String result = action.replace("%player%", player.getName()).replace("[message]", "").trim();
-                    for (Player p : Bukkit.getOnlinePlayers()) {
-                        p.sendMessage(ChatColor.translateAlternateColorCodes('&', result));
-                    }
-                } else {
-                    String result = action.replace("%player%", player.getName());
-                    plugin.getServer().dispatchCommand(plugin.getServer().getConsoleSender(), result);
+    public void ProcessDeleteItems(Queue<Hologram> queue) {
+        rotationSpeed = Math.max(0.0, rotationSpeed - 0.005);
+        if (queue.size() != 1) {
+            Hologram hologram = queue.poll();
+            if (hologram == null) return;
+
+            DHAPI.removeHologram(hologram.getName());
+        }
+    }
+
+    public void MoveHologramToCenter() {
+        radius = Math.max(0.0, radius - 0.1);
+    }
+
+    public void ProcessReward(Player player, Hologram lastHologram, int cancelTicks) {
+        if (lastHologram == null) return;
+
+        GroupData group = holograms.get(DHAPI.getHologram(lastHologram.getName()));
+        if (group == null) return;
+        for (String action : group.getActionStrings()) {
+            if (action.contains("[message]")) {
+                String result = action.replace("%player%", player.getName())
+                        .replace("[message]", "").trim();
+                for (Player players : Bukkit.getOnlinePlayers()) {
+                    players.sendMessage(
+                            ChatColor.translateAlternateColorCodes('&', result)
+                    );
                 }
+                continue;
             }
-        }
 
-        DHAPI.removeHologram(hologram.getName());
-        hologramQueue.poll();
-        holograms.remove(hologram);
-
-        if (blockData != null) {
-            if (blockData.getEffector() != null) blockData.getEffector().setPause(false);
-            blockData.setOpen(false);
-            plugin.setChestOpened(block, false);
-            blockData.getHologram().enable();
-            blockData.getHistory().add(new HistoryData(player, group));
-        }
-
-        if (hologramQueue.isEmpty()) {
-            task.cancel();
+            String result = action.replace("%player%", player.getName());
+            plugin.getServer().dispatchCommand(
+                    plugin.getServer().getConsoleSender(),
+                    result
+            );
         }
     }
 }

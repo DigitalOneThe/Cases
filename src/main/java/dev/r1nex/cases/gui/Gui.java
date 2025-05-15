@@ -24,7 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Gui {
-    public final Cases plugin;
+    private final Cases plugin;
     private final int size;
     private final String title;
 
@@ -153,7 +153,6 @@ public class Gui {
                 }
 
                 blockData.getAnimation().setRadius(0.0);
-                blockData.getAnimation().setSpeed(120.0);
 
                 if (blockData.getEffector() != null) {
                     blockData.getEffector().setPause(true);
@@ -161,7 +160,7 @@ public class Gui {
 
                 blockData.getHologram().disable();
                 blockData.getAnimation().start(
-                        blockData, player, location, block, 8, blockData.getGroupData()
+                        blockData, player, location, block, 6, blockData.getGroupData()
                 );
 
                 blockData.setOpen(true);

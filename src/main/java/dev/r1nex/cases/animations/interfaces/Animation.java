@@ -10,8 +10,6 @@ import java.util.List;
 
 public interface Animation {
 
-    void setSpeed(double value);
     void setRadius(double value);
-    double getSpeed();
     void start(BlockData blockData, Player player, Location location, Block block, int points, List<GroupData> groups);
 }
