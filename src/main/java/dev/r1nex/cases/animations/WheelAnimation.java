@@ -4,7 +4,6 @@ import dev.r1nex.cases.Cases;
 import dev.r1nex.cases.animations.interfaces.Animation;
 import dev.r1nex.cases.data.BlockData;
 import dev.r1nex.cases.data.GroupData;
-import dev.r1nex.cases.data.interfaces.IAction;
 import eu.decentsoftware.holograms.api.DHAPI;
 import eu.decentsoftware.holograms.api.holograms.Hologram;
 import org.bukkit.*;
@@ -19,7 +18,6 @@ import java.util.concurrent.ThreadLocalRandom;
 public class WheelAnimation implements Animation {
 
     private final HashMap<Hologram, GroupData> holograms = new HashMap<>();
-    private double speed = 1.0;
     private double radius = 0.0;
     private double rotationSpeed = 0.0;
 
@@ -134,7 +132,8 @@ public class WheelAnimation implements Animation {
                         MoveHologramToCenter();
 
                         if (radius <= 0.0) {
-                            sync(() -> ProcessReward(player, hologramQueue.element(), 0));
+                            sync(() -> ProcessReward(player, hologramQueue.element()));
+                            completionOfAnimation(blockData, hologramQueue.poll());
                             cancel();
                         }
                     }
@@ -157,7 +156,7 @@ public class WheelAnimation implements Animation {
         radius = Math.max(0.0, radius - 0.1);
     }
 
-    public void ProcessReward(Player player, Hologram lastHologram, int cancelTicks) {
+    public void ProcessReward(Player player, Hologram lastHologram) {
         if (lastHologram == null) return;
 
         GroupData group = holograms.get(DHAPI.getHologram(lastHologram.getName()));
@@ -180,5 +179,17 @@ public class WheelAnimation implements Animation {
                     result
             );
         }
+    }
+
+    public void completionOfAnimation(BlockData blockData, Hologram lastHologram) {
+        if (lastHologram == null) return;
+
+        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            DHAPI.removeHologram(lastHologram.getName());
+            plugin.setChestOpened(blockData.getBlock(), false);
+            blockData.setOpen(false);
+
+            holograms.clear();
+        }, 15L);
     }
 }
