@@ -109,10 +109,15 @@ public class WheelAnimation implements Animation {
 
                     target.set(center[0].getX() + x, center[0].getY() + y + 0.1, center[0].getZ());
 
-                    DHAPI.moveHologram(entry.getKey(), target);
                     if (calculateTicksAnimate % 4 == 0) {
-                        world[0].spawnParticle(Particle.REDSTONE, target, 0, new Particle.DustOptions(color, 1));
+                        world[0].spawnParticle(
+                                Particle.REDSTONE,
+                                target,
+                                0,
+                                new Particle.DustOptions(color, 1)
+                        );
                     }
+                    DHAPI.moveHologram(entry.getKey(), target);
 
                     angle += angleIncrement[0];
                 }
@@ -126,9 +131,9 @@ public class WheelAnimation implements Animation {
 
                     if (hologramQueue.size() == 1) {
                         plugin.setChestOpened(block, true);
-                        MoveHologramToCenter();
+                        MoveHologramToCenter(player, hologramQueue.element(), locationVertex);
 
-                        if (radius <= 0.0) {
+                        if (radius <= -0.1) {
                             sync(() -> ProcessReward(player, hologramQueue.element()));
                             completionOfAnimation(blockData, hologramQueue.element());
                             calculateTicksAnimate = 0;
@@ -157,8 +162,12 @@ public class WheelAnimation implements Animation {
         }
     }
 
-    public void MoveHologramToCenter() {
-        radius = Math.max(0.0, radius - 0.1);
+    public void MoveHologramToCenter(Player player, Hologram lastHologram, Location locVertex) {
+        double distance = lastHologram.getLocation().distance(locVertex);
+//        player.sendMessage("distance item to center: " + distance);
+
+        double increment = Math.min(0.1, 0.1 / (distance + 0.1));
+        radius = Math.max(-0.1, radius - increment);
     }
 
     public void ProcessReward(Player player, Hologram lastHologram) {
