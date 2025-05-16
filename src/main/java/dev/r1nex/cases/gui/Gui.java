@@ -160,7 +160,7 @@ public class Gui {
 
                 blockData.getHologram().disable();
                 blockData.getAnimation().start(
-                        blockData, player, location, block, 6, blockData.getGroupData()
+                        blockData, player, location, block, 8, blockData.getGroupData()
                 );
 
                 blockData.setOpen(true);

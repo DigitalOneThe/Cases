@@ -70,12 +70,10 @@ public class WheelAnimation implements Animation {
         Location locationVertex = new Location(location.getWorld(), location.getX(), location.getY(), location.getZ());
         locationVertex.setY(locationVertex.getY() + 1.5);
 
-        final int totalTicks = 20 * 10;
-        final Location center = location.clone();
-        center.setYaw(180.0f);
-        center.setPitch(-180.0f);
-        final World world = center.getWorld(); // Кэшируем мир
-        final double angleIncrement = 2 * Math.PI / holograms.size();
+        final int[] totalTicks = {20 * 10};
+        final Location[] center = {location.clone()};
+        final World[] world = {center[0].getWorld()}; // Кэшируем мир
+        final double[] angleIncrement = {2 * Math.PI / holograms.size()};
         final Queue<Hologram> hologramQueue = new LinkedList<>(holograms.keySet());
 
         new BukkitRunnable() {
@@ -91,7 +89,7 @@ public class WheelAnimation implements Animation {
                     radius += 0.05;
                 }
 
-                if (!(calculateTicksAnimate >= totalTicks)) {
+                if (!(calculateTicksAnimate >= totalTicks[0])) {
                     rotationSpeed = Math.min(0.1, rotationSpeed + 0.0005);
                 }
 
@@ -104,23 +102,22 @@ public class WheelAnimation implements Animation {
                 angleBase += rotationSpeed;
                 double angle = angleBase;
 
+                Location target = center[0].clone();
                 for (Map.Entry<Hologram, GroupData> entry : holograms.entrySet()) {
                     final double x = radius * Math.cos(angle);
                     final double y = radius * Math.sin(angle);
 
-                    Location target = center.clone().add(x, y + 0.1, 0);
-                    target.setYaw(0.0f);
-                    target.setPitch(-90.0f);
+                    target.set(center[0].getX() + x, center[0].getY() + y + 0.1, center[0].getZ());
 
                     DHAPI.moveHologram(entry.getKey(), target);
                     if (calculateTicksAnimate % 4 == 0) {
-                        world.spawnParticle(Particle.REDSTONE, target, 0, new Particle.DustOptions(color, 1));
+                        world[0].spawnParticle(Particle.REDSTONE, target, 0, new Particle.DustOptions(color, 1));
                     }
 
-                    angle += angleIncrement;
+                    angle += angleIncrement[0];
                 }
 
-                if (calculateTicksAnimate >= totalTicks) {
+                if (calculateTicksAnimate >= totalTicks[0]) {
                     removeDelay ++;
                     if (removeDelay == 5) {
                         removeDelay = 0;
@@ -133,13 +130,21 @@ public class WheelAnimation implements Animation {
 
                         if (radius <= 0.0) {
                             sync(() -> ProcessReward(player, hologramQueue.element()));
-                            completionOfAnimation(blockData, hologramQueue.poll());
+                            completionOfAnimation(blockData, hologramQueue.element());
+                            calculateTicksAnimate = 0;
+                            angleIncrement[0] = 0.0;
+                            removeDelay = 0;
+                            totalTicks[0] = 0;
+                            rotationSpeed = 0.0;
+                            angleBase = 0.0;
+                            center[0] = null;
+                            world[0] = null;
                             cancel();
                         }
                     }
                 }
             }
-        }.runTaskTimerAsynchronously(plugin, 0, 1);
+        }.runTaskTimerAsynchronously(plugin, 0L, 1L);
     }
 
     public void ProcessDeleteItems(Queue<Hologram> queue) {
@@ -184,12 +189,14 @@ public class WheelAnimation implements Animation {
     public void completionOfAnimation(BlockData blockData, Hologram lastHologram) {
         if (lastHologram == null) return;
 
-        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+        Bukkit.getScheduler().runTaskLater(plugin, (bukkitTask) -> {
             DHAPI.removeHologram(lastHologram.getName());
             plugin.setChestOpened(blockData.getBlock(), false);
             blockData.setOpen(false);
+            blockData.getHologram().enable();
 
             holograms.clear();
-        }, 15L);
+            bukkitTask.cancel();
+        }, 60L);
     }
 }
